@@ -70,4 +70,11 @@ router.delete('/delete/:id', authenticate, async (req, res) => {
   }
 });
 
+// ==============================
+// ✅ Temporary Test Route
+// ==============================
+router.get('/test', (req, res) => {
+  res.json({ message: 'Admin route is working!' });
+});
+
 module.exports = router;

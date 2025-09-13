@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { API_BASE } from "../../config/api";  // ✅ import API base
+
+// ✅ API_BASE imported from config
+import { API_BASE } from "../../config/api";
 
 const SlotManagement = () => {
   const [slots, setSlots] = useState([]);
@@ -19,19 +21,21 @@ const SlotManagement = () => {
 
   const fetchSlots = async () => {
     try {
-      const res = await axios.get(`${API_BASE}/api/slots`, {
+      const res = await axios.get(`${API_BASE}/slots`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setSlots(res.data);
+
+      // ✅ Ensure response is always an array
+      setSlots(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error("Error fetching slots:", err);
-      setError("Failed to fetch slots");
+      setError("Failed to fetch slots. Check API URL or backend status.");
     }
   };
 
   useEffect(() => {
     fetchSlots();
-    const interval = setInterval(fetchSlots, 10000);
+    const interval = setInterval(fetchSlots, 10000); // refresh every 10s
     return () => clearInterval(interval);
   }, []);
 
@@ -55,12 +59,12 @@ const SlotManagement = () => {
 
     try {
       if (editSlotId) {
-        await axios.put(`${API_BASE}/api/slots/${editSlotId}`, slotData, {
+        await axios.put(`${API_BASE}/slots/${editSlotId}`, slotData, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setSuccess(`Slot "${newSlot}" updated`);
       } else {
-        await axios.post(`${API_BASE}/api/slots`, slotData, {
+        await axios.post(`${API_BASE}/slots`, slotData, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setSuccess(`Slot "${newSlot}" created`);
@@ -85,7 +89,7 @@ const SlotManagement = () => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`${API_BASE}/api/slots/${id}`, {
+      await axios.delete(`${API_BASE}/slots/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setSuccess("Slot deleted");
@@ -96,20 +100,22 @@ const SlotManagement = () => {
     }
   };
 
-  // ✅ Filter + Search Logic
-  const filteredSlots = slots.filter((slot) => {
-    const matchesFilter =
-      (filter === "vacant" && slot.status === "vacant") ||
-      (filter === "occupied" && slot.status === "occupied") ||
-      (filter === "reserved" && slot.reserved === true) ||
-      filter === "all";
+  // ✅ Safe filter + search
+  const filteredSlots = Array.isArray(slots)
+    ? slots.filter((slot) => {
+        const matchesFilter =
+          (filter === "vacant" && slot.status === "vacant") ||
+          (filter === "occupied" && slot.status === "occupied") ||
+          (filter === "reserved" && slot.reserved === true) ||
+          filter === "all";
 
-    const matchesSearch = slot.slot
-      .toLowerCase()
-      .includes(search.toLowerCase());
+        const matchesSearch = slot.slot
+          .toLowerCase()
+          .includes(search.toLowerCase());
 
-    return matchesFilter && matchesSearch;
-  });
+        return matchesFilter && matchesSearch;
+      })
+    : [];
 
   return (
     <div className="p-4 bg-white rounded shadow">

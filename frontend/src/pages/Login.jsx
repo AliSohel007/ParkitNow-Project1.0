@@ -3,6 +3,9 @@ import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import { FaSpinner } from "react-icons/fa";
 
+// ✅ Use centralized API config
+import { API_BASE } from "../../config/api"; 
+
 const Login = () => {
   const [email, setEmail] = useState("sohel2003@gmail.com");
   const [password, setPassword] = useState("123456");
@@ -10,16 +13,14 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // ✅ Use .env variable instead of hardcoding IP
-  const API_BASE = import.meta.env.VITE_API_BASE_URL;
-
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
     try {
-      const res = await axios.post(`${API_BASE}/api/auth/login`, {
+      // ✅ Call backend login endpoint
+      const res = await axios.post(`${API_BASE}/auth/login`, {
         email,
         password,
       });
@@ -31,16 +32,24 @@ const Login = () => {
 
       if (!token) throw new Error("No token received from backend");
 
-      // Save token & role
+      // ✅ Save token & role in localStorage
       localStorage.setItem("token", token);
       localStorage.setItem("role", role);
 
-      // Redirect based on role
-      navigate(role === "admin" ? "/" : "/user");
+      // ✅ Redirect based on role
+      navigate(role === "admin" ? "/admin" : "/user");
 
     } catch (err) {
       console.error("❌ Login error:", err);
-      setError(err.response?.data?.message || "Invalid email or password");
+
+      // ✅ Handle network / 404 / backend errors
+      if (err.response) {
+        setError(err.response.data?.message || "Invalid email or password");
+      } else if (err.request) {
+        setError("Cannot reach server. Check API URL or network");
+      } else {
+        setError(err.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -87,7 +96,7 @@ const Login = () => {
           />
         </div>
 
-        {/* Button */}
+        {/* Login button */}
         <button
           type="submit"
           disabled={loading}
