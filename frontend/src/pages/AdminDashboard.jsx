@@ -7,10 +7,11 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
 
   const token = localStorage.getItem("token");
+  const API_BASE = import.meta.env.VITE_API_URL; // ✅ Render ka URL .env se aayega
 
   const fetchSlots = async () => {
     try {
-      const res = await axios.get("http://192.168.229.191:5000/api/slots", {
+      const res = await axios.get(`${API_BASE}/api/slots`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setSlots(res.data);

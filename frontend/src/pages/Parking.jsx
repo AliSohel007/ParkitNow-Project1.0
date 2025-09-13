@@ -7,9 +7,12 @@ const Parking = () => {
   const [loading, setLoading] = useState(true);
   const token = localStorage.getItem("token");
 
+  // ✅ Use .env API base
+  const API_BASE = import.meta.env.VITE_API_BASE_URL;
+
   const fetchSlots = async () => {
     try {
-      const res = await axios.get("http://192.168.229.191:5000/api/slots", {
+      const res = await axios.get(`${API_BASE}/api/slots`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setSlots(res.data);
@@ -22,7 +25,7 @@ const Parking = () => {
 
   useEffect(() => {
     fetchSlots();
-    const interval = setInterval(fetchSlots, 10000);
+    const interval = setInterval(fetchSlots, 10000); // refresh every 10 sec
     return () => clearInterval(interval);
   }, []);
 

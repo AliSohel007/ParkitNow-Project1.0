@@ -9,7 +9,9 @@ const ChangePassword = () => {
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
   const token = localStorage.getItem("token");
+  const API_BASE = import.meta.env.VITE_API_URL; // ✅ Render se dynamic URL
 
   const handleChangePassword = async (e) => {
     e.preventDefault();
@@ -29,10 +31,11 @@ const ChangePassword = () => {
     setLoading(true);
     try {
       await axios.put(
-        "http://192.168.229.191:5000/api/admin/change-password",
+        `${API_BASE}/api/admin/change-password`, // ✅ env se API URL
         { currentPassword, newPassword },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+
       setSuccess("✅ Password updated successfully");
       setCurrentPassword("");
       setNewPassword("");

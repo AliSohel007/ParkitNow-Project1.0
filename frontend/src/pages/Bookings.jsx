@@ -13,13 +13,14 @@ const Bookings = () => {
   const token = localStorage.getItem("token");
   const role = localStorage.getItem("role");
   const navigate = useNavigate();
+  const API_BASE = import.meta.env.VITE_API_URL; // ✅ Env se API URL
 
   const fetchBookings = async () => {
     try {
       const endpoint =
         role === "admin"
-          ? "http://192.168.229.191:5000/api/bookings/all"
-          : "http://192.168.229.191:5000/api/bookings/my";
+          ? `${API_BASE}/api/bookings/all`
+          : `${API_BASE}/api/bookings/my`;
 
       const res = await axios.get(endpoint, {
         headers: { Authorization: `Bearer ${token}` },
@@ -42,7 +43,7 @@ const Bookings = () => {
 
     try {
       const res = await axios.post(
-        `http://192.168.229.191:5000/api/bookings/exit/${bookingId}`,
+        `${API_BASE}/api/bookings/exit/${bookingId}`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -52,7 +53,7 @@ const Bookings = () => {
       const completedBooking = res.data.booking;
       console.log("✅ Checkout successful, navigating to summary:", completedBooking._id);
 
-      // ✅ Send the booking directly to ExitSummary
+      // ✅ Send booking to ExitSummary
       navigate(`/exit-summary/${completedBooking._id}`, {
         state: { summary: completedBooking },
       });

@@ -12,6 +12,8 @@ const ExitSummary = () => {
   const [error, setError] = useState("");
   const token = localStorage.getItem("token");
 
+  const API_BASE = import.meta.env.VITE_API_URL; // ✅ Env se backend URL
+
   useEffect(() => {
     // ✅ Use passed summary directly if available
     if (passedSummary) {
@@ -35,12 +37,9 @@ const ExitSummary = () => {
 
       for (let attempt = 1; attempt <= retries; attempt++) {
         try {
-          const res = await axios.get(
-            `http://192.168.229.191:5000/api/bookings/${bookingId}`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          );
+          const res = await axios.get(`${API_BASE}/api/bookings/${bookingId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
 
           const booking = res.data.booking;
 
@@ -82,7 +81,7 @@ const ExitSummary = () => {
       setError("❌ Invalid booking ID");
       setLoading(false);
     }
-  }, [bookingId, passedSummary]);
+  }, [bookingId, passedSummary, API_BASE, token]);
 
   if (loading) return <p className="text-center mt-8">⏳ Loading summary...</p>;
 

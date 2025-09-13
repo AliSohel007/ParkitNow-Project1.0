@@ -1,6 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
-import { useNavigate, Link } from "react-router-dom"; // ✅ use Link
+import { useNavigate, Link } from "react-router-dom";
 
 const Register = () => {
   const [name, setName] = useState("");
@@ -16,11 +16,14 @@ const Register = () => {
     setSuccess("");
 
     try {
-      const res = await axios.post("http://192.168.229.191:5000/api/auth/register", {
-        name,
-        email,
-        password,
-      });
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/auth/register`, // ✅ env se URL
+        {
+          name,
+          email,
+          password,
+        }
+      );
 
       setSuccess("Registration successful!");
       setTimeout(() => {

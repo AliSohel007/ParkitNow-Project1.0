@@ -7,11 +7,14 @@ const RateSettings = () => {
   const [loading, setLoading] = useState(false);
   const token = localStorage.getItem("token");
 
+  // ✅ Backend base URL from environment variable
+  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
   // ✅ Fetch current rate on component mount
   useEffect(() => {
     const fetchRate = async () => {
       try {
-        const res = await axios.get("http://192.168.229.191:5000/api/rate", {
+        const res = await axios.get(`${API_BASE}/api/rate`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         console.log("✅ Fetched rate from backend:", res.data);
@@ -24,14 +27,14 @@ const RateSettings = () => {
     };
 
     fetchRate();
-  }, [token]);
+  }, [token, API_BASE]);
 
   // ✅ Update rate
   const updateRate = async () => {
     setLoading(true);
     try {
       const res = await axios.put(
-        "http://192.168.229.191:5000/api/rate",
+        `${API_BASE}/api/rate`,
         {
           price: Number(price),
           interval: Number(interval),
@@ -47,7 +50,10 @@ const RateSettings = () => {
       alert("✅ Rate updated successfully!");
     } catch (err) {
       console.error("❌ Rate update failed:", err.response?.data || err);
-      alert("❌ Failed to update rate: " + (err.response?.data?.message || "Server error"));
+      alert(
+        "❌ Failed to update rate: " +
+          (err.response?.data?.message || "Server error")
+      );
     } finally {
       setLoading(false);
     }
@@ -69,7 +75,9 @@ const RateSettings = () => {
         </div>
 
         <div>
-          <label className="block mb-1 font-medium">Time Interval (minutes)</label>
+          <label className="block mb-1 font-medium">
+            Time Interval (minutes)
+          </label>
           <input
             type="number"
             value={interval}

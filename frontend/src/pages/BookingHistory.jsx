@@ -4,10 +4,11 @@ import axios from "axios";
 const BookingHistory = () => {
   const [bookings, setBookings] = useState([]);
   const token = localStorage.getItem("token");
+  const API_BASE = import.meta.env.VITE_API_URL; // ✅ URL .env se aayega
 
   const fetchBookings = async () => {
     try {
-      const res = await axios.get("http://192.168.229.191:5000/api/bookings/my", {
+      const res = await axios.get(`${API_BASE}/api/bookings/my`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setBookings(res.data.bookings || []);

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { API_BASE } from "../../config/api";  // ✅ import API base
 
 const SlotManagement = () => {
   const [slots, setSlots] = useState([]);
@@ -12,13 +13,13 @@ const SlotManagement = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [filter, setFilter] = useState("all");
-  const [search, setSearch] = useState(""); // ✅ Search input
+  const [search, setSearch] = useState("");
 
   const token = localStorage.getItem("token");
 
   const fetchSlots = async () => {
     try {
-      const res = await axios.get("http://192.168.229.191:5000/api/slots", {
+      const res = await axios.get(`${API_BASE}/api/slots`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setSlots(res.data);
@@ -30,7 +31,7 @@ const SlotManagement = () => {
 
   useEffect(() => {
     fetchSlots();
-    const interval = setInterval(fetchSlots, 10000); // Auto-refresh every 10 sec
+    const interval = setInterval(fetchSlots, 10000);
     return () => clearInterval(interval);
   }, []);
 
@@ -54,14 +55,12 @@ const SlotManagement = () => {
 
     try {
       if (editSlotId) {
-        await axios.put(
-          `http://192.168.229.191:5000/api/slots/${editSlotId}`,
-          slotData,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        await axios.put(`${API_BASE}/api/slots/${editSlotId}`, slotData, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         setSuccess(`Slot "${newSlot}" updated`);
       } else {
-        await axios.post("http://192.168.229.191:5000/api/slots", slotData, {
+        await axios.post(`${API_BASE}/api/slots`, slotData, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setSuccess(`Slot "${newSlot}" created`);
@@ -86,7 +85,7 @@ const SlotManagement = () => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://192.168.229.191:5000/api/slots/${id}`, {
+      await axios.delete(`${API_BASE}/api/slots/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setSuccess("Slot deleted");

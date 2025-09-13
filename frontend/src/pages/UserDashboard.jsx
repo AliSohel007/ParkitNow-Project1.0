@@ -7,9 +7,11 @@ const UserDashboard = () => {
   const [loading, setLoading] = useState(false);
   const token = localStorage.getItem("token");
 
+  const API_URL = import.meta.env.VITE_API_URL; // ✅ env se URL
+
   const fetchSlots = async () => {
     try {
-      const res = await axios.get("http://192.168.229.191:5000/api/slots", {
+      const res = await axios.get(`${API_URL}/api/slots`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const filtered = res.data.filter(
@@ -23,12 +25,9 @@ const UserDashboard = () => {
 
   const fetchCurrentBooking = async () => {
     try {
-      const res = await axios.get(
-        "http://192.168.229.191:5000/api/bookings/current",
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const res = await axios.get(`${API_URL}/api/bookings/current`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setCurrentBooking(res.data?.booking || null);
     } catch (err) {
       console.error("Error fetching booking", err);
@@ -41,7 +40,7 @@ const UserDashboard = () => {
 
     try {
       await axios.post(
-        "http://192.168.229.191:5000/api/bookings/create",
+        `${API_URL}/api/bookings/create`,
         { slotId },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -61,7 +60,7 @@ const UserDashboard = () => {
   const handleEndBooking = async (bookingId) => {
     try {
       const res = await axios.post(
-        `http://192.168.229.191:5000/api/bookings/exit/${bookingId}`,
+        `${API_URL}/api/bookings/exit/${bookingId}`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },

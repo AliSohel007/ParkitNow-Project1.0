@@ -8,11 +8,13 @@ const ProfileSettings = () => {
   const [error, setError] = useState("");
   const token = localStorage.getItem("token");
 
+  const API_BASE = import.meta.env.VITE_API_URL; // ✅ Render/Env se dynamic URL
+
   // 🔄 Fetch admin profile on load
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await axios.get("http://192.168.229.191:5000/api/admin/me", {
+        const res = await axios.get(`${API_BASE}/api/admin/me`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setProfile({ name: res.data.name, email: res.data.email });
@@ -24,7 +26,7 @@ const ProfileSettings = () => {
       }
     };
     fetchProfile();
-  }, [token]);
+  }, [token, API_BASE]);
 
   // 📝 Handle profile update
   const handleUpdate = async (e) => {
@@ -32,13 +34,13 @@ const ProfileSettings = () => {
     setError("");
     setSuccess("");
     try {
-      await axios.put("http://192.168.229.191:5000/api/admin/me", profile, {
+      await axios.put(`${API_BASE}/api/admin/me`, profile, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setSuccess("Profile updated successfully");
+      setSuccess("✅ Profile updated successfully");
     } catch (err) {
       console.error("Update error:", err);
-      setError("Failed to update profile");
+      setError(err.response?.data?.message || "❌ Failed to update profile");
     }
   };
 
@@ -49,6 +51,7 @@ const ProfileSettings = () => {
       <h3 className="text-xl font-semibold mb-4">👤 Profile Settings</h3>
       {error && <p className="text-red-500 mb-2">{error}</p>}
       {success && <p className="text-green-600 mb-2">{success}</p>}
+
       <form onSubmit={handleUpdate} className="space-y-4">
         <input
           type="text"
