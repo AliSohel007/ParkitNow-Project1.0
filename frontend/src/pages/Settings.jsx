@@ -9,10 +9,10 @@ const Settings = () => {
   const role = localStorage.getItem("role");
 
   return (
-    <div className="p-6">
+    <div className="p-6 bg-gray-100 min-h-screen">
       <h2 className="text-2xl font-bold mb-6">🛠️ Settings</h2>
 
-      {/* 🔁 Responsive Tabs */}
+      {/* 🔁 Tabs */}
       <div className="flex flex-wrap gap-3 mb-6">
         <button
           onClick={() => setActiveTab("profile")}
@@ -53,30 +53,17 @@ const Settings = () => {
         </button>
       </div>
 
-      {/* 📦 Tab Content with smooth transition */}
-      {activeTab === "profile" && (
-        <div className="transition-all duration-300 ease-in-out">
-          <ProfileSettings />
-        </div>
-      )}
-
-      {activeTab === "password" && (
-        <div className="transition-all duration-300 ease-in-out">
-          <ChangePassword />
-        </div>
-      )}
-
-      {activeTab === "rate" && role === "admin" && (
-        <div className="transition-all duration-300 ease-in-out">
-          <RateSettings />
-        </div>
-      )}
-
-      {activeTab === "payment" && (
-        <div className="transition-all duration-300 ease-in-out bg-white p-4 rounded shadow text-gray-700">
-          💳 Payment settings will be added soon.
-        </div>
-      )}
+      {/* Tab Content */}
+      <div className="transition-all duration-300 ease-in-out bg-white p-4 rounded shadow">
+        {activeTab === "profile" && <ProfileSettings />}
+        {activeTab === "password" && <ChangePassword />}
+        {activeTab === "rate" && role === "admin" && <RateSettings />}
+        {activeTab === "payment" && (
+          <div className="text-gray-700">
+            💳 Payment settings will be added soon.
+          </div>
+        )}
+      </div>
     </div>
   );
 };

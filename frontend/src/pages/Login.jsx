@@ -3,12 +3,12 @@ import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import { FaSpinner } from "react-icons/fa";
 
-// ✅ Use centralized API config
-import { API_BASE } from "../../config/api"; 
+// ✅ Centralized API config
+import { API_BASE } from "../config/api";
 
 const Login = () => {
-  const [email, setEmail] = useState("sohel2003@gmail.com");
-  const [password, setPassword] = useState("123456");
+  const [email, setEmail] = useState("sohel2003@gmail.com"); // default test
+  const [password, setPassword] = useState("123456"); // default test
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -19,34 +19,41 @@ const Login = () => {
     setLoading(true);
 
     try {
-      // ✅ Call backend login endpoint
+      // ✅ Call backend
       const res = await axios.post(`${API_BASE}/auth/login`, {
         email,
         password,
       });
 
-      console.log("✅ Login response:", res.data);
+      console.log("✅ Login success:", res.data);
 
       const token = res.data.token;
       const role = res.data.role || "user";
+      const user = res.data.user || {};
 
       if (!token) throw new Error("No token received from backend");
 
-      // ✅ Save token & role in localStorage
+      // ✅ Save token, role, and user
       localStorage.setItem("token", token);
       localStorage.setItem("role", role);
+      localStorage.setItem("user", JSON.stringify(user));
+
+      console.log("🔑 Saved token:", token);
+      console.log("👤 Saved role:", role);
 
       // ✅ Redirect based on role
-      navigate(role === "admin" ? "/admin" : "/user");
-
+      if (role === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (err) {
       console.error("❌ Login error:", err);
 
-      // ✅ Handle network / 404 / backend errors
       if (err.response) {
         setError(err.response.data?.message || "Invalid email or password");
       } else if (err.request) {
-        setError("Cannot reach server. Check API URL or network");
+        setError("Cannot reach server. Check API URL or network.");
       } else {
         setError(err.message);
       }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { API_BASE } from "../config/api"; // ✅ single source
 
 const Bookings = () => {
   const [bookings, setBookings] = useState([]);
@@ -13,14 +14,12 @@ const Bookings = () => {
   const token = localStorage.getItem("token");
   const role = localStorage.getItem("role");
   const navigate = useNavigate();
-  const API_BASE = import.meta.env.VITE_API_URL; // ✅ Env se API URL
 
+  // Fetch bookings from backend
   const fetchBookings = async () => {
     try {
       const endpoint =
-        role === "admin"
-          ? `${API_BASE}/api/bookings/all`
-          : `${API_BASE}/api/bookings/my`;
+        role === "admin" ? `${API_BASE}/bookings/all` : `${API_BASE}/bookings/my`;
 
       const res = await axios.get(endpoint, {
         headers: { Authorization: `Bearer ${token}` },
@@ -28,7 +27,7 @@ const Bookings = () => {
 
       setBookings(res.data?.bookings || []);
     } catch (err) {
-      console.error("Failed to fetch bookings", err);
+      console.error("Failed to fetch bookings", err.response?.data || err.message);
       setError("Error loading bookings.");
     }
   };
@@ -37,34 +36,31 @@ const Bookings = () => {
     fetchBookings();
   }, []);
 
+  // Checkout active booking (user only)
   const handleCheckout = async (bookingId) => {
-    console.log("🧪 Trying to checkout booking:", bookingId);
     setLoadingCheckoutId(bookingId);
 
     try {
       const res = await axios.post(
-        `${API_BASE}/api/bookings/exit/${bookingId}`,
+        `${API_BASE}/bookings/exit/${bookingId}`,
         {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       const completedBooking = res.data.booking;
-      console.log("✅ Checkout successful, navigating to summary:", completedBooking._id);
-
-      // ✅ Send booking to ExitSummary
       navigate(`/exit-summary/${completedBooking._id}`, {
         state: { summary: completedBooking },
       });
     } catch (err) {
-      console.error("❌ Exit failed:", err.response?.data || err.message);
+      console.error("Exit failed:", err.response?.data || err.message);
       alert(err?.response?.data?.message || "❌ Failed to checkout");
     } finally {
       setLoadingCheckoutId("");
+      fetchBookings(); // refresh bookings after checkout
     }
   };
 
+  // Filters
   const filteredByEmail = bookings.filter((b) =>
     role === "admin"
       ? b.userId?.email?.toLowerCase().includes(searchEmail.toLowerCase())
@@ -79,7 +75,10 @@ const Bookings = () => {
     );
   });
 
+  // Export CSV
   const exportToCSV = () => {
+    if (!filteredByDate.length) return;
+
     const rows = filteredByDate.map((b) => ({
       Email: b.userId?.email || "N/A",
       Slot: b.slotId?.slot || "N/A",
@@ -87,17 +86,14 @@ const Bookings = () => {
       Location: b.slotId?.location || "Not specified",
       StartTime: new Date(b.startTime).toLocaleString(),
       EndTime: b.endTime ? new Date(b.endTime).toLocaleString() : "-",
-      Duration: b.duration || "",
-      Fare: b.fare || "",
+      Duration: b.duration || "-",
+      Fare: b.fare || "-",
       Status: b.isActive ? "Active" : "Completed",
     }));
 
     const csv =
       "data:text/csv;charset=utf-8," +
-      [
-        Object.keys(rows[0]).join(","),
-        ...rows.map((r) => Object.values(r).join(",")),
-      ].join("\n");
+      [Object.keys(rows[0]).join(","), ...rows.map((r) => Object.values(r).join(","))].join("\n");
 
     const encoded = encodeURI(csv);
     const link = document.createElement("a");
@@ -108,14 +104,14 @@ const Bookings = () => {
   };
 
   return (
-    <div>
+    <div className="p-6 bg-gray-100 min-h-screen">
       <h2 className="text-2xl font-bold mb-4">
         {role === "admin" ? "📋 All Bookings (Admin)" : "📋 Your Bookings"}
       </h2>
 
       {error && <p className="text-red-500">{error}</p>}
 
-      {/* 🔍 Filters */}
+      {/* Filters */}
       {role === "admin" && (
         <div className="mb-4 space-y-2">
           <input
@@ -154,10 +150,7 @@ const Bookings = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {filteredByDate.map((booking) => (
-            <div
-              key={booking._id}
-              className="border p-4 rounded shadow bg-white"
-            >
+            <div key={booking._id} className="border p-4 rounded shadow bg-white">
               {role === "admin" && (
                 <p className="text-sm text-gray-600 mb-2">
                   👤 User: <strong>{booking.userId?.email || "N/A"}</strong>
@@ -167,20 +160,17 @@ const Bookings = () => {
                 Slot: {booking.slotId?.slot || "N/A"}
               </h3>
               <p>
-                <strong>Location:</strong>{" "}
-                {booking.slotId?.location || "Not specified"}
+                <strong>Location:</strong> {booking.slotId?.location || "Not specified"}
               </p>
               <p>
                 <strong>Rate:</strong> ₹{booking.slotId?.rate || 0}
               </p>
               <p>
-                <strong>Start Time:</strong>{" "}
-                {new Date(booking.startTime).toLocaleString()}
+                <strong>Start Time:</strong> {new Date(booking.startTime).toLocaleString()}
               </p>
               {booking.endTime && (
                 <p>
-                  <strong>End Time:</strong>{" "}
-                  {new Date(booking.endTime).toLocaleString()}
+                  <strong>End Time:</strong> {new Date(booking.endTime).toLocaleString()}
                 </p>
               )}
               {booking.duration && (
@@ -194,24 +184,21 @@ const Bookings = () => {
                 </p>
               )}
               <p>
-                <strong>Status:</strong>{" "}
-                {booking.isActive ? "🟢 Active" : "✅ Completed"}
+                <strong>Status:</strong> {booking.isActive ? "🟢 Active" : "✅ Completed"}
               </p>
 
               <p className="text-xs mt-2 text-gray-500">
                 <strong>Booking ID:</strong> {booking._id}
               </p>
 
-              {/* ✅ Checkout Button for Active Bookings (User Only) */}
+              {/* Checkout button for active bookings (user only) */}
               {booking.isActive && role !== "admin" && (
                 <button
                   onClick={() => handleCheckout(booking._id)}
                   className="mt-3 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-60"
                   disabled={loadingCheckoutId === booking._id}
                 >
-                  {loadingCheckoutId === booking._id
-                    ? "Processing..."
-                    : "Checkout"}
+                  {loadingCheckoutId === booking._id ? "Processing..." : "Checkout"}
                 </button>
               )}
             </div>

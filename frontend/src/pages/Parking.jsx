@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { API_BASE } from "../config/api"; // ✅ .env se ek hi source
 
 const Parking = () => {
   const [slots, setSlots] = useState([]);
@@ -7,17 +8,15 @@ const Parking = () => {
   const [loading, setLoading] = useState(true);
   const token = localStorage.getItem("token");
 
-  // ✅ Use .env API base
-  const API_BASE = import.meta.env.VITE_API_BASE_URL;
-
+  // Fetch slots from backend
   const fetchSlots = async () => {
     try {
-      const res = await axios.get(`${API_BASE}/api/slots`, {
+      const res = await axios.get(`${API_BASE}/slots`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setSlots(res.data);
     } catch (err) {
-      console.error("Error fetching slots:", err);
+      console.error("Error fetching slots:", err.response?.data || err.message);
     } finally {
       setLoading(false);
     }
@@ -29,6 +28,7 @@ const Parking = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Filter slots based on selected filter
   const filteredSlots = slots.filter((slot) => {
     if (filter === "all") return true;
     if (filter === "vacant") return slot.status === "vacant";
@@ -58,6 +58,7 @@ const Parking = () => {
         </select>
       </div>
 
+      {/* Slots Grid */}
       {loading ? (
         <p>⏳ Loading slots...</p>
       ) : filteredSlots.length === 0 ? (
@@ -72,30 +73,25 @@ const Parking = () => {
               <h3 className="text-xl font-bold text-blue-700 mb-2">
                 🚗 Slot: {slot.slot}
               </h3>
-
               <div className="space-y-1 text-sm text-gray-700">
                 <p>
                   <strong>Status:</strong>{" "}
                   <span
                     className={`font-medium ${
-                      slot.status === "vacant"
-                        ? "text-green-600"
-                        : "text-red-600"
+                      slot.status === "vacant" ? "text-green-600" : "text-red-600"
                     }`}
                   >
                     {slot.status === "vacant" ? "🟢 Vacant" : "🔴 Occupied"}
                   </span>
                 </p>
                 <p>
-                  <strong>Reserved:</strong>{" "}
-                  {slot.reserved ? "🟡 Yes" : "No"}
+                  <strong>Reserved:</strong> {slot.reserved ? "🟡 Yes" : "No"}
                 </p>
                 <p>
                   <strong>Rate:</strong> ₹{slot.rate}
                 </p>
                 <p>
-                  <strong>Location:</strong>{" "}
-                  {slot.location ? slot.location : "-"}
+                  <strong>Location:</strong> {slot.location || "-"}
                 </p>
               </div>
             </div>

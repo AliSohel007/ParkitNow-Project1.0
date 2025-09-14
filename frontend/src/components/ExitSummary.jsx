@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import axios from "axios";
+import { API_BASE } from "../config/api";
 
 const ExitSummary = () => {
   const { bookingId } = useParams();
@@ -12,10 +13,7 @@ const ExitSummary = () => {
   const [error, setError] = useState("");
   const token = localStorage.getItem("token");
 
-  const API_BASE = import.meta.env.VITE_API_URL; // ✅ Env se backend URL
-
   useEffect(() => {
-    // ✅ Use passed summary directly if available
     if (passedSummary) {
       setSummary({
         slot: passedSummary.slotId?.slot || "N/A",
@@ -28,65 +26,56 @@ const ExitSummary = () => {
       return;
     }
 
-    // 🔁 Else, fallback to fetch logic
     let retries = 3;
     const retryDelay = 400;
 
     const fetchSummary = async () => {
-      console.log("Booking ID from URL:", bookingId);
+      if (!bookingId) {
+        setError("❌ Invalid booking ID");
+        setLoading(false);
+        return;
+      }
 
       for (let attempt = 1; attempt <= retries; attempt++) {
         try {
-          const res = await axios.get(`${API_BASE}/api/bookings/${bookingId}`, {
+          const res = await axios.get(`${API_BASE}/bookings/${bookingId}`, {
             headers: { Authorization: `Bearer ${token}` },
           });
 
           const booking = res.data.booking;
-
           if (!booking) {
             setError("Booking not found.");
-            return;
+            break;
           }
 
           if (!booking.isActive && booking.fare && booking.endTime) {
             setSummary({
               slot: booking.slotId?.slot || "Unknown Slot",
               duration: booking.duration ? `${booking.duration} minutes` : "N/A",
-              totalFare: booking.fare ? `₹${booking.fare}` : "N/A",
+              totalFare: booking.fare ? `₹${Math.round(booking.fare)}` : "N/A",
               status: "✅ Completed",
               exitTime: booking.endTime,
             });
-            return;
+            break;
           } else {
             console.warn(`⚠️ Booking not completed yet (attempt ${attempt})`);
-            if (attempt < retries) {
-              await new Promise((res) => setTimeout(res, retryDelay));
-              continue;
-            }
-            setError("Booking not completed yet.");
+            if (attempt < retries) await new Promise((res) => setTimeout(res, retryDelay));
+            else setError("Booking not completed yet.");
           }
         } catch (err) {
           console.error("❌ Failed to fetch exit summary:", err);
           setError(err?.response?.data?.message || "Error fetching exit summary");
-          return;
-        } finally {
-          setLoading(false);
+          break;
         }
       }
+      setLoading(false);
     };
 
-    if (bookingId) {
-      fetchSummary();
-    } else {
-      setError("❌ Invalid booking ID");
-      setLoading(false);
-    }
-  }, [bookingId, passedSummary, API_BASE, token]);
+    fetchSummary();
+  }, [bookingId, passedSummary, token]);
 
   if (loading) return <p className="text-center mt-8">⏳ Loading summary...</p>;
-
-  if (error)
-    return <p className="text-center mt-8 text-red-500">❌ {error}</p>;
+  if (error) return <p className="text-center mt-8 text-red-500">❌ {error}</p>;
 
   return (
     <div className="max-w-md mx-auto mt-10 bg-white p-6 shadow-lg rounded">
@@ -100,9 +89,7 @@ const ExitSummary = () => {
         <p><strong>Status:</strong> {summary.status}</p>
         <p>
           <strong>Exit Time:</strong>{" "}
-          {summary.exitTime
-            ? new Date(summary.exitTime).toLocaleString()
-            : "N/A"}
+          {summary.exitTime ? new Date(summary.exitTime).toLocaleString() : "N/A"}
         </p>
       </div>
     </div>

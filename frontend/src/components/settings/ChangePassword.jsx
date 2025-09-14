@@ -11,7 +11,7 @@ const ChangePassword = () => {
   const [loading, setLoading] = useState(false);
 
   const token = localStorage.getItem("token");
-  const API_BASE = import.meta.env.VITE_API_URL; // ✅ Render se dynamic URL
+  const API_BASE = import.meta.env.VITE_API_URL; // ✅ Dynamic URL from .env
 
   const handleChangePassword = async (e) => {
     e.preventDefault();
@@ -31,7 +31,7 @@ const ChangePassword = () => {
     setLoading(true);
     try {
       await axios.put(
-        `${API_BASE}/api/admin/change-password`, // ✅ env se API URL
+        `${API_BASE}/admin/change-password`,
         { currentPassword, newPassword },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -61,7 +61,8 @@ const ChangePassword = () => {
           placeholder="Current Password"
           value={currentPassword}
           onChange={(e) => setCurrentPassword(e.target.value)}
-          className="border px-3 py-2 rounded w-full"
+          className="border px-3 py-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
+          required
         />
 
         <input
@@ -69,7 +70,8 @@ const ChangePassword = () => {
           placeholder="New Password"
           value={newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
-          className="border px-3 py-2 rounded w-full"
+          className="border px-3 py-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
+          required
         />
 
         <input
@@ -77,7 +79,8 @@ const ChangePassword = () => {
           placeholder="Confirm New Password"
           value={confirmNewPassword}
           onChange={(e) => setConfirmNewPassword(e.target.value)}
-          className="border px-3 py-2 rounded w-full"
+          className="border px-3 py-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
+          required
         />
 
         <button

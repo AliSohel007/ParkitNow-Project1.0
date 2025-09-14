@@ -1,22 +1,36 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { FaCarSide } from "react-icons/fa";
+import { API_BASE } from "../config/api"; // central config
 
 const AdminDashboard = () => {
   const [slots, setSlots] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  const token = localStorage.getItem("token");
-  const API_BASE = import.meta.env.VITE_API_URL; // ✅ Render ka URL .env se aayega
+  const [error, setError] = useState(null);
 
   const fetchSlots = async () => {
     try {
-      const res = await axios.get(`${API_BASE}/api/slots`, {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setError("No token found. Please login again.");
+        setLoading(false);
+        return;
+      }
+
+      const res = await axios.get(`${API_BASE}/slots`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setSlots(res.data);
+
+      // ✅ Ensure response is always array
+      const data = Array.isArray(res.data)
+        ? res.data
+        : res.data.slots || [];
+      setSlots(data);
+      setError(null);
     } catch (err) {
       console.error("Error fetching slots:", err);
+      setError("Failed to load slots");
+      setSlots([]); // fallback
     } finally {
       setLoading(false);
     }
@@ -24,15 +38,17 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     fetchSlots();
-    const interval = setInterval(fetchSlots, 10000);
+    const interval = setInterval(fetchSlots, 10000); // auto refresh
     return () => clearInterval(interval);
   }, []);
 
+  // ✅ Safe calculations
   const total = slots.length;
   const vacant = slots.filter((s) => s.status === "vacant").length;
   const occupied = slots.filter((s) => s.status === "occupied").length;
   const reserved = slots.filter((s) => s.reserved).length;
 
+  // ✅ Group by level
   const groupByLevel = {};
   slots.forEach((slot) => {
     const slotName = slot.slot || slot.slotNumber || slot.name || "A0";
@@ -71,6 +87,8 @@ const AdminDashboard = () => {
 
       {loading ? (
         <p className="text-gray-500">Loading slot data...</p>
+      ) : error ? (
+        <p className="text-red-500">{error}</p>
       ) : (
         <p className="text-sm text-gray-500 mb-4">
           Last updated: {new Date().toLocaleTimeString()}
@@ -81,7 +99,9 @@ const AdminDashboard = () => {
       <div className="space-y-8">
         {Object.entries(groupByLevel).map(([level, levelSlots]) => (
           <div key={level}>
-            <h3 className="text-xl font-semibold mb-2 text-gray-700">{level}</h3>
+            <h3 className="text-xl font-semibold mb-2 text-gray-700">
+              {level}
+            </h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-4">
               {levelSlots.map((slot) => {
                 const isOccupied = slot.status === "occupied";

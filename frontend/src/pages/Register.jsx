@@ -1,6 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
+import { API_BASE } from "../config/api"; // ✅ import API_BASE
 
 const Register = () => {
   const [name, setName] = useState("");
@@ -8,29 +9,31 @@ const Register = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleRegister = async (e) => {
     e.preventDefault();
     setError("");
     setSuccess("");
+    setLoading(true);
 
     try {
-      const res = await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/auth/register`, // ✅ env se URL
-        {
-          name,
-          email,
-          password,
-        }
-      );
+      const res = await axios.post(`${API_BASE}/auth/register`, {
+        name,
+        email,
+        password,
+      });
 
-      setSuccess("Registration successful!");
+      setSuccess("✅ Registration successful!");
       setTimeout(() => {
         navigate("/login");
       }, 1500);
     } catch (err) {
-      setError(err.response?.data?.error || "Registration failed");
+      console.error("Registration error:", err);
+      setError(err.response?.data?.error || "❌ Registration failed");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -69,11 +72,15 @@ const Register = () => {
           className="w-full border px-3 py-2 rounded"
           required
         />
+
         <button
           type="submit"
-          className="bg-blue-600 text-white py-2 px-4 w-full rounded hover:bg-blue-700"
+          disabled={loading}
+          className={`w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition ${
+            loading ? "opacity-50 cursor-not-allowed" : ""
+          }`}
         >
-          Register
+          {loading ? "Registering..." : "Register"}
         </button>
 
         <p className="text-sm text-center mt-2">
