@@ -1,8 +1,5 @@
 import { useEffect, useState } from "react";
-import { io } from "socket.io-client";
-
-// 🔗 Backend Socket URL
-const socket = io("http://localhost:5000");
+import socket from "../utils/socket"; // path check kar lena
 
 const Dashboard = () => {
   const [slots, setSlots] = useState({});
@@ -10,13 +7,11 @@ const Dashboard = () => {
 
   // ---------------- LIVE SOCKET LISTENERS ----------------
   useEffect(() => {
-    // SLOT UPDATES
     socket.on("slot_update", (data) => {
       console.log("LIVE SLOTS:", data);
       setSlots(data.slots || {});
     });
 
-    // LPR ENTRY UPDATES
     socket.on("lpr_update", (data) => {
       console.log("LIVE LPR:", data);
       setLastEntry(data);
