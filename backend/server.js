@@ -14,9 +14,11 @@ const app = express();
 // ✅ CORS setup
 // Localhost for dev + allow all origins in production
 const allowedOrigins = [
-  'http://localhost:5173', // React frontend local dev
-  'http://127.0.0.1:5173'  // fallback local dev
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'https://parkit-now-project1-0.vercel.app'
 ];
+
 
 app.use(cors({
   origin: function (origin, callback) {
