@@ -11,25 +11,25 @@ connectDB();
 
 const app = express();
 
-// ✅ CORS FIX (FINAL)
+/*
+|--------------------------------------------------------------------------
+| ✅ CORS CONFIG (RENDER + VERCEL SAFE)
+|--------------------------------------------------------------------------
+| IMPORTANT RULE:
+| - Do NOT mix custom origin logic + app.options
+| - Let cors() handle OPTIONS automatically
+*/
 app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'http://127.0.0.1:5173',
-    'https://parkit-now-project1-0.vercel.app'
-  ],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  origin: 'https://parkit-now-project1-0.vercel.app',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
+  credentials: false
 }));
 
-// 🔑 VERY IMPORTANT: handle preflight requests
-app.options('*', cors());
-
-// JSON body parser
+// Body parser
 app.use(express.json());
 
-// Root route (Render test)
+// Root route (health check)
 app.get('/', (req, res) => {
   res.send('🚀 ParkitNow Backend is running!');
 });
@@ -39,22 +39,22 @@ app.get('/api/test', (req, res) => {
   res.json({ message: 'API is working!' });
 });
 
-// Route Imports
+// Routes
 const authRoutes = require('./routes/authRoutes');
 const slotRoutes = require('./routes/slotRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const rateRoutes = require('./routes/rateRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 
-// Route Registration
+// Route registration
 app.use('/api/auth', authRoutes);
 app.use('/api/slots', slotRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/rate', rateRoutes);
 app.use('/api/admin', adminRoutes);
 
-// Start Server (Render compatible)
+// Start server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Server is running on port ${PORT}`);
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
 });
