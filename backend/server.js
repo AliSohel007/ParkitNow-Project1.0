@@ -1,6 +1,8 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
+const http = require('http');
+const { Server } = require('socket.io');
 const connectDB = require('./config/db');
 
 // Load environment variables
@@ -15,9 +17,6 @@ const app = express();
 |--------------------------------------------------------------------------
 | ✅ CORS CONFIG (RENDER + VERCEL SAFE)
 |--------------------------------------------------------------------------
-| IMPORTANT RULE:
-| - Do NOT mix custom origin logic + app.options
-| - Let cors() handle OPTIONS automatically
 */
 app.use(cors({
   origin: 'https://parkit-now-project1-0.vercel.app',
@@ -53,8 +52,41 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/rate', rateRoutes);
 app.use('/api/admin', adminRoutes);
 
+/* ======================================================
+   🔥 SOCKET.IO SETUP (LIVE UPDATES)
+====================================================== */
+
+const server = http.createServer(app);
+
+const io = new Server(server, {
+  cors: {
+    origin: 'https://parkit-now-project1-0.vercel.app',
+    methods: ['GET', 'POST']
+  }
+});
+
+io.on('connection', (socket) => {
+  console.log('🟢 WebSocket client connected:', socket.id);
+
+  // From detector.py (slot status)
+  socket.on('slot_update', (data) => {
+    console.log('📡 SLOT UPDATE:', data);
+    io.emit('slot_update', data); // broadcast to website
+  });
+
+  // From lpr_entry_clean.py (entry gate)
+  socket.on('lpr_event', (data) => {
+    console.log('🚗 LPR EVENT:', data);
+    io.emit('lpr_update', data); // broadcast to website
+  });
+
+  socket.on('disconnect', () => {
+    console.log('🔴 WebSocket client disconnected:', socket.id);
+  });
+});
+
 // Start server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+server.listen(PORT, () => {
+  console.log(`🚀 Server + Socket.IO running on port ${PORT}`);
 });
